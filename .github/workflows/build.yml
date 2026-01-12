@@ -8,12 +8,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # 1. On prépare l'ordinateur du robot
+      # 1. Préparation pour éviter les erreurs de date
       - name: Get Date
         id: get-date
         run: |
           echo "date=$(date -u "+%Y%m%d")" >> $GITHUB_OUTPUT
 
+      # 2. Mise en cache pour que ça aille plus vite la prochaine fois
       - name: Cache Buildozer global directory
         uses: actions/cache@v3
         with:
@@ -26,7 +27,7 @@ jobs:
           path: .buildozer
           key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('buildozer.spec') }}
 
-      # 2. On installe les outils Python et Android
+      # 3. Installation MANUELLE des outils (C'est ça qui répare ton bug)
       - name: Install dependencies
         run: |
           sudo apt update
@@ -36,15 +37,14 @@ jobs:
           sudo apt install -y openjdk-17-jdk unzip zip
           pip3 install --upgrade buildozer cython==0.29.33 virtualenv
 
-      # 3. On lance la fabrication (Debug)
+      # 4. Lancement de la fabrication
       - name: Build with Buildozer
         run: |
           yes | buildozer android debug
 
-      # 4. On envoie le fichier fini
+      # 5. Récupération de l'APK fini
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: mon-scanner-app
           path: bin/*.apk
-          
