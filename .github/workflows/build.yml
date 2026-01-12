@@ -1,0 +1,50 @@
+name: Build APK
+on: [push]
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # 1. On prépare l'ordinateur du robot
+      - name: Get Date
+        id: get-date
+        run: |
+          echo "date=$(date -u "+%Y%m%d")" >> $GITHUB_OUTPUT
+
+      - name: Cache Buildozer global directory
+        uses: actions/cache@v3
+        with:
+          path: .buildozer_global
+          key: buildozer-global-${{ hashFiles('buildozer.spec') }}
+
+      - name: Cache Buildozer directory
+        uses: actions/cache@v3
+        with:
+          path: .buildozer
+          key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('buildozer.spec') }}
+
+      # 2. On installe les outils Python et Android
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install -y build-essential libssl-dev libffi-dev python3-dev
+          sudo apt install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
+          sudo apt install -y zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libtool
+          sudo apt install -y openjdk-17-jdk unzip zip
+          pip3 install --upgrade buildozer cython==0.29.33 virtualenv
+
+      # 3. On lance la fabrication (Debug)
+      - name: Build with Buildozer
+        run: |
+          yes | buildozer android debug
+
+      # 4. On envoie le fichier fini
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: mon-scanner-app
+          path: bin/*.apk
+          
