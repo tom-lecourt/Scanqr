@@ -8,13 +8,13 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      # 1. Préparation pour éviter les erreurs de date
+      # 1. On prépare la date pour le cache
       - name: Get Date
         id: get-date
         run: |
           echo "date=$(date -u "+%Y%m%d")" >> $GITHUB_OUTPUT
 
-      # 2. Mise en cache pour que ça aille plus vite la prochaine fois
+      # 2. On active le cache (pour que ça aille plus vite la prochaine fois)
       - name: Cache Buildozer global directory
         uses: actions/cache@v3
         with:
@@ -27,14 +27,14 @@ jobs:
           path: .buildozer
           key: ${{ runner.os }}-${{ steps.get-date.outputs.date }}-${{ hashFiles('buildozer.spec') }}
 
-      # 3. Installation MANUELLE des outils (C'est ça qui répare ton bug)
+      # 3. Installation des outils (J'ai ajouté autoconf et automake ici !)
       - name: Install dependencies
         run: |
           sudo apt update
           sudo apt install -y build-essential libssl-dev libffi-dev python3-dev
           sudo apt install -y libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev
           sudo apt install -y zlib1g-dev libncurses5-dev libncursesw5-dev libtinfo5 cmake libtool
-          sudo apt install -y openjdk-17-jdk unzip zip
+          sudo apt install -y autoconf automake openjdk-17-jdk unzip zip
           pip3 install --upgrade buildozer cython==0.29.33 virtualenv
 
       # 4. Lancement de la fabrication
@@ -48,3 +48,4 @@ jobs:
         with:
           name: mon-scanner-app
           path: bin/*.apk
+          
